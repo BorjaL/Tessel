@@ -1,16 +1,36 @@
-var http = require('http');
-var tessel = require('tessel');
+var router = require('tiny-router'),
+	tessel = require('tessel');
 
-var listener = function( request, response ) {
-
-  console.log("Got a request to " + request.url );
-
-  var url = request.url
-
-  if (url == "/"){
-    tessel.led[0].toggle();
-    response.send(200);
-  }
+var lights = {
+	green: tessel.led[0],
+	blue: tessel.led[1],
+	red: tessel.led[2],
+	amber: tessel.led[3]
 };
 
-var server = http.createServer(listener).listen( 8000 );
+router
+	.get('/', function(req, res) {
+        res.send('Simple light web API');
+    })
+    .get('/lights', function(req, res){
+        res.send(lights);
+    })
+    .get('/green', function(req, res){
+        var state = lights.green.read();
+        lights.green.write(state);
+        res.send({status: state});
+    })
+    .get('/green/{state}', function(req, res){
+        var state = parseInt(req.body.state);
+        lights.green.write(state);
+        res.send({status: state});
+    });
+
+
+setTimeout(function(){ 
+	router.listen(8000); 
+	lights.blue.write(1);
+}, 10000);
+
+
+  
